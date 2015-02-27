@@ -19,8 +19,8 @@ def load_database (filename, train_size):
 	record_read = 0
 	for row in reader:
 		# Extract the content and setiment
-		content = row[3].strip ()
-		sentiment = row[4].strip ()
+		content = TextBlob (row[3].strip ())
+		sentiment = TextBlob (row[4].strip ())
 
 		# Append to the train_data
 		train_data.append ((content, sentiment))
@@ -34,13 +34,12 @@ def load_database (filename, train_size):
 
 # Remove all URL in the content
 def remove_url (content):
-	return re.sub(r'^https|http?:\/\/.*[\r\n]*', '', content, flags=re.MULTILINE)
+	return TextBlob (re.sub(r'^https|http?:\/\/.*[\r\n]*', '', "{0}".format (content), flags=re.MULTILINE))
 
 # Tokenize the content
 def tokenize (content):
 	tokenizer = PunktWordTokenizer ()
-	textblob = TextBlob (content, tokenizer = tokenizer)
-	return textblob.tokens
+	return content.tokenize (tokenizer)
 
 # Remove all @ tag in the token list
 def remove_ad_tag (tokens):
@@ -71,11 +70,11 @@ def remove_nonalphabet (tokens):
 # Stem the token into the normalized from
 def stem_tokens (tokens):
 	stemmer = PorterStemmer ()
-	return [str (stemmer.stem_word (token)) for token in tokens]	# str () is to convert the possible unicode string into normal string
+	return [stemmer.stem_word (token) for token in tokens]
 
 # Concatinate all tokens into a single string
 def join_tokens (tokens):
-	content = ""
+	content = TextBlob ("")
 	for token in tokens:
 		content = content + " " + token
 	return content

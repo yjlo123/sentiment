@@ -9,5 +9,5 @@ TRAINER_PARAM_TRAIN_SIZE = 100
 # The database file for features
 FEATURE_FILE_NAME = 'inquirerbasic.csv'
 
-# Irrelevant threshold
-IRRELEVANT_THRESHOLD = 0.7
+# Strength threshold for the maximum probability
+STRENGTH_THRESHOLD = (0.7, 0.85, 0.88, 0.92, 0.94, 1)

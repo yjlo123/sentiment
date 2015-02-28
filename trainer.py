@@ -74,12 +74,19 @@ class Trainer:
 
 		classification = self.__classifier.prob_classify (processed)
 		
-		max_prob = classification.prob (classification.max ())
-		if (max_prob < params.IRRELEVANT_THRESHOLD):
-			return ("Irrelevant", max_prob)
-		else:
-			return (classification.max (), max_prob)
+		result = classification.max ()
+		max_prob = classification.prob (result)
 
+		if (result != "neutral"):
+			for strength_lvl in range (0, len (params.STRENGTH_THRESHOLD)):
+				if max_prob < params.STRENGTH_THRESHOLD[strength_lvl]:
+					if strength_lvl == 0:
+						result = "irrelevant"
+					else:
+						result = result + " " + str (strength_lvl)
+					break
+					
+		return (result, max_prob)
 
 
 	# Return the classifier that is trained by the data provided

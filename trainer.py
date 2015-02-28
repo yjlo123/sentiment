@@ -2,11 +2,15 @@ from textblob import TextBlob
 from textblob.classifiers import NaiveBayesClassifier
 from nltk.tokenize import PunktWordTokenizer
 from nltk.stem import PorterStemmer
+import collections
 import params
 import stopword_list
 import sys
 import csv
 import re
+
+# Define the record tuple
+Record = collections.namedtuple ("Record", "content sentiment")
 
 # Read the database file into an array of (content, sentiment) tuples
 def load_database (filename, train_size):
@@ -23,7 +27,7 @@ def load_database (filename, train_size):
 		sentiment = TextBlob (row[4].strip ())
 
 		# Append to the train_data
-		train_data.append ((content, sentiment))
+		train_data.append (Record (content, sentiment))
 
 		# Count the record read, stop if the desired has been reached
 		record_read = record_read + 1
@@ -82,13 +86,13 @@ def join_tokens (tokens):
 # Process the raw data from user
 def process_data (train_data):
 	# Remove all irrelevant record
-	train_data = [row for row in train_data if row[1] != "irrelevant"]
+	train_data = [row for row in train_data if row.sentiment != "irrelevant"]
 
 	temp = []
 	# Tokenize, stem, and remove all unnecessary information 
 	for row in train_data:
-		content = row[0]
-		sentiment = row[1]
+		content = row.content
+		sentiment = row.sentiment
 
 		content = remove_url (content)
 		tokens = tokenize (content)
@@ -101,7 +105,7 @@ def process_data (train_data):
 
 		# Skip the row if the content is shorter than 3 characters
 		if (len (content) > 3):
-			temp.append ((content, sentiment))
+			temp.append (Record (content, sentiment))
 
 	return temp
 
@@ -116,8 +120,9 @@ def get_trained_classifier (train_data):
 
 
 #### Main Program
+
+# Get train data and train the classifier
 train_data = load_database (params.TRAINER_PARAM_INPUT_FILE_NAME, params.TRAINER_PARAM_TRAIN_SIZE)
 train_data = process_data (train_data)
 classifier = get_trained_classifier (train_data)
-
 

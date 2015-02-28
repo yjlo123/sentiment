@@ -42,16 +42,19 @@ class Trainer:
 		self.__process_data ()
 
 	# Remove all URL in the content string
-	def __remove_url (self, content):
+	@staticmethod
+	def __remove_url (content):
 		return TextBlob (re.sub(r'^https|http?:\/\/.*[\r\n]*', '', "{0}".format (content), flags=re.MULTILINE))
 
 	# Tokenize the content string into a list of tokens
-	def __tokenize (self, content):
+	@staticmethod
+	def __tokenize (content):
 		tokenizer = PunktWordTokenizer ()
 		return content.tokenize (tokenizer)
 
 	# Remove all @ tag in the token list
-	def __remove_ad_tag (self, tokens):
+	@staticmethod
+	def __remove_ad_tag (tokens):
 		temp = []
 		for i in range (0, len (tokens)):
 			if tokens[i] == "@": continue				# Do not copy the @
@@ -60,7 +63,8 @@ class Trainer:
 		return temp
 
 	# Remove all # tag in the token list
-	def __remove_hash_tag (self, tokens):
+	@staticmethod
+	def __remove_hash_tag (tokens):
 		temp = []
 		for i in range (0, len (tokens)):
 			if tokens[i] == "#": continue				# Do not copy the #
@@ -69,35 +73,41 @@ class Trainer:
 		return temp
 
 	# Remove all stopwords in the token list
-	def __remove_stopwords (self, tokens, stopword_list):
+	@staticmethod
+	def __remove_stopwords (tokens, stopword_list):
 		return [token for token in tokens if token not in stopword_list]
 
 	# Get rid of all non-alphabet tokens
-	def __remove_nonalphabet (self, tokens):
+	@staticmethod
+	def __remove_nonalphabet (tokens):
 		return [token for token in tokens if token.isalpha ()]
 
 	# Stem the token into the normalized from
-	def __stem_tokens (self, tokens):
+	@staticmethod
+	def __stem_tokens (tokens):
 		stemmer = PorterStemmer ()
 		return [stemmer.stem_word (token) for token in tokens]
 
 	# Concatinate all tokens into a single string
-	def __join_tokens (self, tokens):
+	@staticmethod
+	def __join_tokens (tokens):
 		content = TextBlob ("")
 		for token in tokens:
 			content = content + " " + token
 		return content
 
-	# Process a single content from user
-	def __process_content (self, content):
-		content = self.__remove_url (content)
-		tokens = self.__tokenize (content)
-		tokens = self.__remove_ad_tag (tokens)
-		tokens = self.__remove_hash_tag (tokens)
-		tokens = self.__remove_nonalphabet (tokens)
-		tokens = self.__stem_tokens (tokens)
-		tokens = self.__remove_stopwords (tokens, stopword_list.get_stopwords())
-		content = self.__join_tokens (tokens)
+	# Normalize a single content from user
+	@staticmethod
+	def normalize_content (content):
+		content = content.lower ()
+		content = Trainer.__remove_url (content)
+		tokens = Trainer.__tokenize (content)
+		tokens = Trainer.__remove_ad_tag (tokens)
+		tokens = Trainer.__remove_hash_tag (tokens)
+		tokens = Trainer.__remove_nonalphabet (tokens)
+		tokens = Trainer.__stem_tokens (tokens)
+		tokens = Trainer.__remove_stopwords (tokens, stopword_list.get_stopwords())
+		content = Trainer.__join_tokens (tokens)
 
 		return content
 
@@ -109,7 +119,7 @@ class Trainer:
 		temp = []
 		# Tokenize, stem, and remove all unnecessary information 
 		for row in self.__train_data:
-			content = self.__process_content (row.content)
+			content = Trainer.normalize_content (row.content)
 			sentiment = row.sentiment
 
 			# Skip the row if the content is shorter than 3 characters
@@ -124,8 +134,12 @@ class Trainer:
 		self.__classifier = NaiveBayesClassifier (self.__train_data)
 
 	def classify (self, content):
-		processed = self.__process_content (content)
-		return self.__classifier.classify (processed)
+		processed = Trainer.normalize_content (content)
+
+		classification = self.__classifier.prob_classify (processed)
+		confident = classification.prob (classification.max ())
+
+		return confident
 
 	# Return the classifier that is trained by the data provided
 	def get_trained_classifier (self):
@@ -146,4 +160,3 @@ trainer.train_classifier (params.TRAINER_PARAM_INPUT_FILE_NAME, params.TRAINER_P
 
 print (trainer.classify ("Rep. Weiner exposes yet another republican lie, while Virginia Foxx squeaks"))
 print (trainer.classify ("all LIES from the republican"))
-print (trainer.classify ("republican"))

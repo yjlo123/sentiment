@@ -3,6 +3,7 @@ from textblob.classifiers import NaiveBayesClassifier
 from nltk.tokenize import PunktWordTokenizer
 from nltk.stem import PorterStemmer
 from content_normalizer import ContentNormalizer
+from feature_extractor import FeatureExtractor
 import collections
 import params
 import stopword_list
@@ -16,6 +17,7 @@ Record = collections.namedtuple ("Record", "content sentiment")
 class Trainer:
 	def __init__ (self):
 		self.__train_data = []
+		self.__feature_extractor = FeatureExtractor ()
 
 	# Read the database file into the train_data field as a list of Record tuple
 	def __load_database (self, filename, train_size):
@@ -64,13 +66,21 @@ class Trainer:
 		self.__load_database (filename, train_size)
 		self.__classifier = NaiveBayesClassifier (self.__train_data)
 
+	def train_analyzer (self, filename):
+		self.__feature_extractor.load_feature_list (filename)
+
 	def classify (self, content):
 		processed = ContentNormalizer.normalize_content (content)
 
 		classification = self.__classifier.prob_classify (processed)
-		confident = classification.prob (classification.max ())
+		
+		max_prob = classification.prob (classification.max ())
+		if (max_prob < params.IRRELEVANT_THRESHOLD):
+			return ("Irrelevant", max_prob)
+		else:
+			return (classification.max (), max_prob)
 
-		return confident
+
 
 	# Return the classifier that is trained by the data provided
 	def get_trained_classifier (self):
@@ -88,6 +98,9 @@ class Trainer:
 # Get train data and train the classifier
 trainer = Trainer ()
 trainer.train_classifier (params.TRAINER_PARAM_INPUT_FILE_NAME, params.TRAINER_PARAM_TRAIN_SIZE)
+trainer.train_analyzer (params.FEATURE_FILE_NAME)
 
 print (trainer.classify ("Rep. Weiner exposes yet another republican lie, while Virginia Foxx squeaks"))
 print (trainer.classify ("all LIES from the republican"))
+print (trainer.classify ("sky is grey, i just want to sleep"))
+print (trainer.classify ("how are you today"))

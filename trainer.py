@@ -108,6 +108,7 @@ class Trainer:
 		tokens = Trainer.__stem_tokens (tokens)
 		tokens = Trainer.__remove_stopwords (tokens, stopword_list.get_stopwords())
 		content = Trainer.__join_tokens (tokens)
+		content = content.strip ()
 
 		return content
 
@@ -155,8 +156,8 @@ class Trainer:
 #### Main Program
 
 # Get train data and train the classifier
-trainer = Trainer ()
-trainer.train_classifier (params.TRAINER_PARAM_INPUT_FILE_NAME, params.TRAINER_PARAM_TRAIN_SIZE)
+# trainer = Trainer ()
+# trainer.train_classifier (params.TRAINER_PARAM_INPUT_FILE_NAME, params.TRAINER_PARAM_TRAIN_SIZE)
 
-print (trainer.classify ("Rep. Weiner exposes yet another republican lie, while Virginia Foxx squeaks"))
-print (trainer.classify ("all LIES from the republican"))
+# print (trainer.classify ("Rep. Weiner exposes yet another republican lie, while Virginia Foxx squeaks"))
+# print (trainer.classify ("all LIES from the republican"))

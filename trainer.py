@@ -2,6 +2,7 @@ from textblob import TextBlob
 from textblob.classifiers import NaiveBayesClassifier
 from nltk.tokenize import PunktWordTokenizer
 from nltk.stem import PorterStemmer
+from content_normalizer import ContentNormalizer
 import collections
 import params
 import stopword_list
@@ -41,77 +42,6 @@ class Trainer:
 		# Process the data
 		self.__process_data ()
 
-	# Remove all URL in the content string
-	@staticmethod
-	def __remove_url (content):
-		return TextBlob (re.sub(r'^https|http?:\/\/.*[\r\n]*', '', "{0}".format (content), flags=re.MULTILINE))
-
-	# Tokenize the content string into a list of tokens
-	@staticmethod
-	def __tokenize (content):
-		tokenizer = PunktWordTokenizer ()
-		return content.tokenize (tokenizer)
-
-	# Remove all @ tag in the token list
-	@staticmethod
-	def __remove_ad_tag (tokens):
-		temp = []
-		for i in range (0, len (tokens)):
-			if tokens[i] == "@": continue				# Do not copy the @
-			if i > 0 and tokens[i-1] == "@": continue	# Do not copy anything right after @
-			temp.append (tokens[i])
-		return temp
-
-	# Remove all # tag in the token list
-	@staticmethod
-	def __remove_hash_tag (tokens):
-		temp = []
-		for i in range (0, len (tokens)):
-			if tokens[i] == "#": continue				# Do not copy the #
-			if i > 0 and tokens[i-1] == "#": continue	# Do not copy anything right after #
-			temp.append (tokens[i])
-		return temp
-
-	# Remove all stopwords in the token list
-	@staticmethod
-	def __remove_stopwords (tokens, stopword_list):
-		return [token for token in tokens if token not in stopword_list]
-
-	# Get rid of all non-alphabet tokens
-	@staticmethod
-	def __remove_nonalphabet (tokens):
-		return [token for token in tokens if token.isalpha ()]
-
-	# Stem the token into the normalized from
-	@staticmethod
-	def __stem_tokens (tokens):
-		stemmer = PorterStemmer ()
-		return [stemmer.stem_word (token) for token in tokens]
-
-	# Concatinate all tokens into a single string
-	@staticmethod
-	def __join_tokens (tokens):
-		content = TextBlob ("")
-		for token in tokens:
-			content = content + " " + token
-		return content
-
-	# Normalize a single content from user
-	@staticmethod
-	def normalize_content (content):
-		content = content.lower ()
-		content = Trainer.__remove_url (content)
-		tokens = Trainer.__tokenize (content)
-		tokens = Trainer.__remove_ad_tag (tokens)
-		tokens = Trainer.__remove_hash_tag (tokens)
-		tokens = Trainer.__remove_nonalphabet (tokens)
-		tokens = Trainer.__stem_tokens (tokens)
-		tokens = Trainer.__remove_stopwords (tokens, stopword_list.get_stopwords())
-		content = Trainer.__join_tokens (tokens)
-		content = content.strip ()
-
-		return content
-
 	# Process the raw data from user
 	def __process_data (self):
 		# Remove all irrelevant record
@@ -120,7 +50,7 @@ class Trainer:
 		temp = []
 		# Tokenize, stem, and remove all unnecessary information 
 		for row in self.__train_data:
-			content = Trainer.normalize_content (row.content)
+			content = ContentNormalizer.normalize_content (row.content)
 			sentiment = row.sentiment
 
 			# Skip the row if the content is shorter than 3 characters
@@ -135,7 +65,7 @@ class Trainer:
 		self.__classifier = NaiveBayesClassifier (self.__train_data)
 
 	def classify (self, content):
-		processed = Trainer.normalize_content (content)
+		processed = ContentNormalizer.normalize_content (content)
 
 		classification = self.__classifier.prob_classify (processed)
 		confident = classification.prob (classification.max ())
@@ -156,8 +86,8 @@ class Trainer:
 #### Main Program
 
 # Get train data and train the classifier
-# trainer = Trainer ()
-# trainer.train_classifier (params.TRAINER_PARAM_INPUT_FILE_NAME, params.TRAINER_PARAM_TRAIN_SIZE)
+trainer = Trainer ()
+trainer.train_classifier (params.TRAINER_PARAM_INPUT_FILE_NAME, params.TRAINER_PARAM_TRAIN_SIZE)
 
-# print (trainer.classify ("Rep. Weiner exposes yet another republican lie, while Virginia Foxx squeaks"))
-# print (trainer.classify ("all LIES from the republican"))
+print (trainer.classify ("Rep. Weiner exposes yet another republican lie, while Virginia Foxx squeaks"))
+print (trainer.classify ("all LIES from the republican"))

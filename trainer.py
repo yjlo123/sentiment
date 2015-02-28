@@ -17,7 +17,7 @@ class Trainer:
 		self.__train_data = []
 
 	# Read the database file into the train_data field as a list of Record tuple
-	def load_database (self, filename, train_size):
+	def __load_database (self, filename, train_size):
 		# Load the train database into memory
 		self.__train_data = []
 		f_input = open (filename, 'rt')
@@ -88,6 +88,19 @@ class Trainer:
 			content = content + " " + token
 		return content
 
+	# Process a single content from user
+	def __process_content (self, content):
+		content = self.__remove_url (content)
+		tokens = self.__tokenize (content)
+		tokens = self.__remove_ad_tag (tokens)
+		tokens = self.__remove_hash_tag (tokens)
+		tokens = self.__remove_nonalphabet (tokens)
+		tokens = self.__stem_tokens (tokens)
+		tokens = self.__remove_stopwords (tokens, stopword_list.get_stopwords())
+		content = self.__join_tokens (tokens)
+
+		return content
+
 	# Process the raw data from user
 	def __process_data (self):
 		# Remove all irrelevant record
@@ -96,17 +109,8 @@ class Trainer:
 		temp = []
 		# Tokenize, stem, and remove all unnecessary information 
 		for row in self.__train_data:
-			content = row.content
+			content = self.__process_content (row.content)
 			sentiment = row.sentiment
-
-			content = self.__remove_url (content)
-			tokens = self.__tokenize (content)
-			tokens = self.__remove_ad_tag (tokens)
-			tokens = self.__remove_hash_tag (tokens)
-			tokens = self.__remove_nonalphabet (tokens)
-			tokens = self.__stem_tokens (tokens)
-			tokens = self.__remove_stopwords (tokens, stopword_list.get_stopwords())
-			content = self.__join_tokens (tokens)
 
 			# Skip the row if the content is shorter than 3 characters
 			if (len (content) > 3):
@@ -114,10 +118,20 @@ class Trainer:
 
 		self.__train_data = temp
 
+	# Train the classifier using the database provided
+	def train_classifier (self, filename, train_size):
+		self.__load_database (filename, train_size)
+		self.__classifier = NaiveBayesClassifier (self.__train_data)
+
+	def classify (self, content):
+		processed = self.__process_content (content)
+		return self.__classifier.classify (processed)
+
 	# Return the classifier that is trained by the data provided
 	def get_trained_classifier (self):
-		return NaiveBayesClassifier (self.__train_data)
+		return self.__classifier
 
+	# Return the train data
 	def get_trained_data (self):
 		return self.__train_data
 
@@ -128,9 +142,6 @@ class Trainer:
 
 # Get train data and train the classifier
 trainer = Trainer ()
-trainer.load_database (params.TRAINER_PARAM_INPUT_FILE_NAME, params.TRAINER_PARAM_TRAIN_SIZE)
-classifier = trainer.get_trained_classifier ()
+trainer.train_classifier (params.TRAINER_PARAM_INPUT_FILE_NAME, params.TRAINER_PARAM_TRAIN_SIZE)
 
-
-for row in trainer.get_trained_data ():
-	print row
+print (trainer.classify ("Rep. Weiner exposes yet another republican lie, while Virginia Foxx squeaks"))

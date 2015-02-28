@@ -81,12 +81,12 @@ class Trainer:
 			for strength_lvl in range (0, len (params.STRENGTH_THRESHOLD)):
 				if max_prob < params.STRENGTH_THRESHOLD[strength_lvl]:
 					if strength_lvl == 0:
-						result = "irrelevant"
+						result = TextBlob ("irrelevant")
 					else:
 						result = result + " " + str (strength_lvl)
 					break
 					
-		return (result, max_prob)
+		return (result, "Confident: " + str (max_prob))
 
 
 	# Return the classifier that is trained by the data provided

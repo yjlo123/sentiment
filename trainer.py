@@ -145,3 +145,5 @@ trainer = Trainer ()
 trainer.train_classifier (params.TRAINER_PARAM_INPUT_FILE_NAME, params.TRAINER_PARAM_TRAIN_SIZE)
 
 print (trainer.classify ("Rep. Weiner exposes yet another republican lie, while Virginia Foxx squeaks"))
+print (trainer.classify ("all LIES from the republican"))
+print (trainer.classify ("republican"))

@@ -10,4 +10,10 @@ TRAINER_PARAM_TRAIN_SIZE = 100
 FEATURE_FILE_NAME = 'inquirerbasic.csv'
 
 # Strength threshold for the maximum probability
-STRENGTH_THRESHOLD = (0.7, 0.85, 0.88, 0.92, 0.94, 1)
+STRENGTH_THRESHOLD = [0.38, 0.6, 0.88, 0.92, 0.94, 1]
+
+# The database file to tune
+DEV_PARAM_INPUT_FILE_NAME = 'test.csv'
+
+# test first few records, set to -1 to test all
+DEV_PARAM_TRAIN_SIZE = -1

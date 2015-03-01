@@ -63,10 +63,12 @@ class Trainer:
 
 	# Train the classifier using the database provided
 	def train_classifier (self, filename, train_size):
+		#print "Training classifier..."
 		self.__load_database (filename, train_size)
 		self.__classifier = NaiveBayesClassifier (self.__train_data)
 
 	def train_analyzer (self, filename):
+		#print "Loading feature list..."
 		self.__feature_extractor.load_feature_list (filename)
 
 	def classify (self, content):
@@ -83,9 +85,10 @@ class Trainer:
 					if strength_lvl == 0:
 						result = "irrelevant"
 					else:
-						result = result + " " + str (strength_lvl)
+						result = (result, strength_lvl)
 					break
-					
+		else:
+			result = (result, 0)
 		return (result, max_prob)
 
 
@@ -100,6 +103,7 @@ class Trainer:
 
 
 
+'''
 #### Main Program
 
 # Get train data and train the classifier
@@ -111,3 +115,4 @@ print (trainer.classify ("Rep. Weiner exposes yet another republican lie, while 
 print (trainer.classify ("all LIES from the republican"))
 print (trainer.classify ("sky is grey, i just want to sleep"))
 print (trainer.classify ("how are you today"))
+'''
